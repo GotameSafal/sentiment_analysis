@@ -297,16 +297,25 @@ class SentimentAnalyzer:
         """Predict sentiment for a single text."""
         if not self.is_trained:
             raise ValueError("Model is not trained yet. Call train_model() first.")
-        
+
         # Prepare features
         features = self.prepare_features([text])
-        
+
         # Get prediction and probabilities
         prediction = self.model.predict(features)[0]
         probabilities = self.model.predict_proba(features)[0]
-        
-        # Get sentiment label
-        sentiment = self.label_decoder[prediction]
+
+        # Get sentiment label - fix numpy string compatibility
+        if hasattr(prediction, 'item'):
+            prediction_key = prediction.item()
+        else:
+            prediction_key = prediction
+
+        # Handle string predictions directly
+        if isinstance(prediction_key, str):
+            sentiment = prediction_key
+        else:
+            sentiment = self.label_decoder[prediction_key]
         
         # Create probability dictionary
         prob_dict = {
